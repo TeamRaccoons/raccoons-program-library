@@ -1,5 +1,4 @@
 use bytemuck::bytes_of;
-use ed25519_dalek::Signer;
 use signed_data::Ed25519SignatureOffsets;
 use solana_sdk::{
     ed25519_instruction::{DATA_START, PUBKEY_SERIALIZED_SIZE, SIGNATURE_SERIALIZED_SIZE},
@@ -9,17 +8,10 @@ use solana_sdk::{
 /// This is to verify a message from ix data of another instruction
 /// The solana-sdk new_ed25519_instruction does not allow this
 pub fn new_ed25519_instruction_without_payload(
-    keypair: &ed25519_dalek::Keypair,
     message: &[u8],
     ix_index: u16,
     offset: u16,
 ) -> Instruction {
-    let signature = keypair.sign(message).to_bytes();
-    let pubkey = keypair.public.to_bytes();
-
-    assert_eq!(pubkey.len(), PUBKEY_SERIALIZED_SIZE);
-    assert_eq!(signature.len(), SIGNATURE_SERIALIZED_SIZE);
-
     let mut instruction_data = Vec::with_capacity(
         DATA_START
             .saturating_add(SIGNATURE_SERIALIZED_SIZE)

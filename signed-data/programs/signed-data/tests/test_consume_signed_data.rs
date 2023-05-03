@@ -1,16 +1,9 @@
 use anchor_lang::{prelude::Pubkey, AnchorSerialize, InstructionData, ToAccountMetas};
-// use ed25519_dalek::Signer;
-use rand::thread_rng;
 use signed_data;
 use solana_program_test::*;
 use solana_sdk::{
-    ed25519_instruction::new_ed25519_instruction,
-    instruction::{Instruction, InstructionError},
-    signature::Keypair,
-    signer::Signer,
-    system_program, sysvar,
+    instruction::Instruction, signature::Keypair, signer::Signer, system_program, sysvar,
     transaction::Transaction,
-    transport::TransportError,
 };
 mod ed25519_helper;
 use solana_sdk::{pubkey, transaction::TransactionError};
@@ -39,8 +32,8 @@ pub async fn process_transaction(
 async fn test_consume_signed_data() {
     let pt = ProgramTest::new("signed_data", signed_data::ID, None);
 
-    let oracle_authority_keypair = ed25519_dalek::Keypair::generate(&mut thread_rng());
-    let oracle_authority = Pubkey::try_from(oracle_authority_keypair.public.as_ref()).unwrap();
+    let oracle_authority_keypair = Keypair::new();
+    let oracle_authority = oracle_authority_keypair.pubkey();
     let usdc_mint = pubkey!("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
     let config = Pubkey::find_program_address(&[b"config"], &signed_data::ID).0;
 
@@ -71,17 +64,12 @@ async fn test_consume_signed_data() {
         mint: usdc_mint,
     };
     let message = oracle_data.try_to_vec().unwrap();
-    let signature = ed25519_dalek::Signer::try_sign(&oracle_authority_keypair, &message).unwrap();
+    let signature = oracle_authority_keypair.sign_message(&message);
 
     process_transaction(
         &mut context,
         &[
-            ed25519_helper::new_ed25519_instruction_without_payload(
-                &oracle_authority_keypair,
-                &message,
-                1,
-                8,
-            ),
+            ed25519_helper::new_ed25519_instruction_without_payload(&message, 1, 8),
             Instruction {
                 program_id: signed_data::ID,
                 accounts: signed_data::accounts::ConsumeSignedData {
@@ -90,7 +78,7 @@ async fn test_consume_signed_data() {
                 }
                 .to_account_metas(None),
                 data: signed_data::instruction::ConsumeSignedData {
-                    signature: signature.to_bytes(),
+                    signature: signature.into(),
                     oracle_authority,
                     oracle_data: oracle_data.clone(),
                 }
@@ -103,17 +91,12 @@ async fn test_consume_signed_data() {
     .unwrap();
 
     // Same message but signature is incorrect
-    let mut signature = signature.to_bytes();
+    let mut signature: [u8; 64] = signature.into();
     signature[0] += 1; // Screw up the signature
     let result = process_transaction(
         &mut context,
         &[
-            ed25519_helper::new_ed25519_instruction_without_payload(
-                &oracle_authority_keypair,
-                &message,
-                1,
-                8,
-            ),
+            ed25519_helper::new_ed25519_instruction_without_payload(&message, 1, 8),
             Instruction {
                 program_id: signed_data::ID,
                 accounts: signed_data::accounts::ConsumeSignedData {

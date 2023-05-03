@@ -3386,8 +3386,6 @@ version = "0.1.0"
 dependencies = [
  "anchor-lang",
  "bytemuck",
- "ed25519-dalek",
- "rand 0.7.3",
  "solana-program-test",
  "solana-sdk",
 ]

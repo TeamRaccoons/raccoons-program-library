@@ -18,12 +18,18 @@ pub mod signed_data {
         oracle_authority: Pubkey,
         oracle_data: OracleData,
     ) -> Result<()> {
-        let current_instruction =
+        let current_ix_index =
             sysvar::instructions::load_current_index_checked(&ctx.accounts.instructions_sysvar)?;
-        require_neq!(current_instruction, 0);
+        require_neq!(current_ix_index, 0);
+
+        let current_ixn = sysvar::instructions::load_instruction_at_checked(
+            current_ix_index as usize,
+            &ctx.accounts.instructions_sysvar,
+        )?;
+        require_keys_eq!(current_ixn.program_id, *ctx.program_id); // This ensures it is a top level invocation as the runtime does not allow re-entrency
 
         // The previous ix must be a ed25519 program instruction
-        let ed25519_ix_index = (current_instruction - 1) as u8;
+        let ed25519_ix_index = (current_ix_index - 1) as u8;
         let ed25519_ix = sysvar::instructions::load_instruction_at_checked(
             ed25519_ix_index as usize,
             &ctx.accounts.instructions_sysvar,
@@ -47,12 +53,12 @@ pub mod signed_data {
                 ErrorCode::InvalidDataOffsets
             })?;
         require_eq!(offsets.signature_offset, 8);
-        require_eq!(offsets.signature_instruction_index, current_instruction);
+        require_eq!(offsets.signature_instruction_index, current_ix_index);
         require_eq!(offsets.public_key_offset, 8 + 64);
-        require_eq!(offsets.public_key_instruction_index, current_instruction);
+        require_eq!(offsets.public_key_instruction_index, current_ix_index);
         require_eq!(offsets.message_data_offset, 8 + 64 + 32);
         require_eq!(offsets.message_data_size, OracleData::SIZE);
-        require_eq!(offsets.message_instruction_index, current_instruction);
+        require_eq!(offsets.message_instruction_index, current_ix_index);
 
         require_keys_eq!(oracle_authority, ctx.accounts.config.oracle_authority);
 

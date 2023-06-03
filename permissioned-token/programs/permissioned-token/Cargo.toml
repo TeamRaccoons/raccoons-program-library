@@ -1,0 +1,34 @@
+[package]
+name = "permissioned-token"
+version = "0.1.0"
+description = "Created with Anchor"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "permissioned_token"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = "0.26.0"
+solana-program = "1.14"
+arrayref = "0.3.7"
+
+spl-tlv-account-resolution = { version = "0.1.0" , path = "../../../solana-program-library/libraries/tlv-account-resolution" }
+spl-transfer-hook-interface = { version = "0.1.0" , path = "../../../solana-program-library/token/transfer-hook-interface" }
+spl-type-length-value = { version = "0.1.0" , path = "../../../solana-program-library/libraries/type-length-value" }
+
+[dev-dependencies]
+solana-program-test = "1.14"
+solana-sdk = "1.14"
+spl-token-2022 = { version = "0.6",  path = "../../../solana-program-library/token/program-2022", features = ["no-entrypoint"] }
+spl-token-client = { version = "0.5",  path = "../../../solana-program-library/token/client" }
+
+winnow = "=0.4.1"
+toml_datetime = "=0.6.1"

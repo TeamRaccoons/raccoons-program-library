@@ -1,0 +1,26 @@
+[package]
+name = "signed-ix"
+version = "0.1.0"
+description = "Created with Anchor"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "signed_ix"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = "0.28.0"
+rand = "0.7.3"
+libsecp256k1 = "0.6.0"
+
+[dev-dependencies]
+solana-program-test = "1.16"
+solana-sdk = "1.16"
+solana-program = "1.16"
